@@ -1,4 +1,5 @@
 local helpers = require "spec.helpers"
+local declarative = require "kong.db.declarative"
 
 local fmod    = math.fmod
 
@@ -16,7 +17,7 @@ for _, strategy in helpers.each_strategy() do
 
     -- Note by default the page size is 100, we should keep this number
     -- less than 100/(tags_per_entity)
-    -- otherwise the 'limits maximum queries in single request' tests 
+    -- otherwise the 'limits maximum queries in single request' tests
     -- for Cassandra might fail
     local test_entity_count = 10
 
@@ -35,6 +36,11 @@ for _, strategy in helpers.each_strategy() do
         assert.is_nil(err)
         assert.is_nil(err_t)
         assert.same(service.tags, row.tags)
+      end
+
+      if strategy == "off" then
+        local entities = assert(bp.done())
+        declarative.load_into_cache(entities)
       end
     end)
 
@@ -75,7 +81,7 @@ for _, strategy in helpers.each_strategy() do
     end)
 
 
-    describe("update row in tags table with", function()
+    describe("#db update row in tags table with", function()
       local service1 = db.services:select_by_name("service1")
       assert.is_not_nil(service1)
       assert.is_not_nil(service1.id)
@@ -87,9 +93,9 @@ for _, strategy in helpers.each_strategy() do
       -- due to the different sql in postgres stragey
       -- we need to test these two methods seperately
       local scenarios = {
-        { "update", { id = service1.id }, "service1", }, 
+        { "update", { id = service1.id }, "service1", },
         { "update_by_name", "service2", "service2"},
-        { "upsert", { id = service3.id }, "service3" }, 
+        { "upsert", { id = service3.id }, "service3" },
         { "upsert_by_name", "service4", "service4"},
       }
       for _, scenario in pairs(scenarios) do
@@ -132,7 +138,7 @@ for _, strategy in helpers.each_strategy() do
       end
     end)
 
-    describe("delete row in tags table with", function()
+    describe("#db delete row in tags table with", function()
       local service5 = db.services:select_by_name("service5")
       assert.is_not_nil(service5)
       assert.is_not_nil(service5.id)
@@ -140,7 +146,7 @@ for _, strategy in helpers.each_strategy() do
       -- due to the different sql in postgres stragey
       -- we need to test these two methods seperately
       local scenarios = {
-        { "delete", { id = service5.id }, "service5" }, 
+        { "delete", { id = service5.id }, "service5" },
         { "delete_by_name", "service6", "service6" },
       }
       for i, scenario in pairs(scenarios) do
@@ -173,13 +179,13 @@ for _, strategy in helpers.each_strategy() do
       end
     end)
 
-    describe("upsert row in tags table with", function()
+    describe("#db upsert row in tags table with", function()
       -- due to the different sql in postgres stragey
       -- we need to test these two methods seperately
       -- note this is different from test "update row in tags table with"
       -- as this test actually creats new records
       local scenarios = {
-        { "upsert", { id = require("kong.tools.utils").uuid() }, { "service-upsert-1" } }, 
+        { "upsert", { id = require("kong.tools.utils").uuid() }, { "service-upsert-1" } },
         { "upsert_by_name", "service-upsert-2", { "service-upsert-2" } },
       }
       for _, scenario in pairs(scenarios) do
@@ -220,6 +226,11 @@ for _, strategy in helpers.each_strategy() do
         assert.same(service.tags, row.tags)
       end
 
+      if strategy == "off" then
+        local entities = assert(bp.done())
+        declarative.load_into_cache(entities)
+      end
+
       local scenarios = { -- { tags[], expected_result_count }
         {
           { { "paging" } },
@@ -232,7 +243,7 @@ for _, strategy in helpers.each_strategy() do
         {
           { { "team_paging_1", "team_paging_2" }, "or" },
           total_entities_count/single_tag_count*2,
-        }, 
+        },
         {
           { { "paging", "team_paging_1" }, "and" },
           total_entities_count/single_tag_count,
@@ -246,8 +257,9 @@ for _, strategy in helpers.each_strategy() do
       local paging_size = { total_entities_count/single_tag_count, }
 
       for s_idx, scenario in ipairs(scenarios) do
+
         local opts, expected_count = unpack(scenario)
-        for i=1, 2 do -- also produce a size=nil iteration
+        for i = 1, 2 do -- also produce a size=nil iteration
           local size = paging_size[i]
 
           local scenario_name = string.format("#%d %s %s", s_idx, opts[2] and opts[2]:upper() or "",
@@ -283,7 +295,6 @@ for _, strategy in helpers.each_strategy() do
             end)
           end)
         end
-
       end
 
       local func = pending
@@ -297,7 +308,7 @@ for _, strategy in helpers.each_strategy() do
         it("and exits early if PAGING_MAX_QUERY_ROUNDS exceeded", function()
           stub(ngx, "log")
 
-          local rows, err, err_t, offset = db.services:page(2, nil, 
+          local rows, err, err_t, offset = db.services:page(2, nil,
             { tags = { "paging", "tag_notexist" }, tags_cond = 'and' })
           assert(is_valid_page(rows, err, err_t))
           assert.is_not_nil(offset)
@@ -396,7 +407,7 @@ for _, strategy in helpers.each_strategy() do
 
     end)
 
-    describe("errors if tag value is invalid", function()
+    describe("#db errors if tag value is invalid", function()
       assert.has_error(function()
         bp.services:insert({
           host = "invalid-tag.com",

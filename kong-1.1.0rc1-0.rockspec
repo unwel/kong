@@ -134,6 +134,7 @@ build = {
     ["kong.db.dao.targets"] = "kong/db/dao/targets.lua",
     ["kong.db.dao.plugins"] = "kong/db/dao/plugins.lua",
     ["kong.db.dao.tags"] = "kong/db/dao/tags.lua",
+    ["kong.db.dao.cluster_ca"] = "kong/db/dao/cluster_ca.lua",
     ["kong.db.declarative"] = "kong/db/declarative/init.lua",
     ["kong.db.schema"] = "kong/db/schema/init.lua",
     ["kong.db.schema.entities.cluster_ca"] = "kong/db/schema/entities/cluster_ca.lua",
@@ -166,6 +167,8 @@ build = {
     ["kong.db.strategies.postgres.tags"] = "kong/db/strategies/postgres/tags.lua",
     ["kong.db.strategies.off"] = "kong/db/strategies/off/init.lua",
     ["kong.db.strategies.off.connector"] = "kong/db/strategies/off/connector.lua",
+    ["kong.db.strategies.off.tags"] = "kong/db/strategies/off/tags.lua",
+
     ["kong.db.migrations.state"] = "kong/db/migrations/state.lua",
     ["kong.db.migrations.helpers"] = "kong/db/migrations/helpers.lua",
     ["kong.db.migrations.core"] = "kong/db/migrations/core/init.lua",
