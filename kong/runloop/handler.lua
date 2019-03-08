@@ -85,7 +85,7 @@ do
       local service, err = db.services:select(service_pk)
       if not service then
         return nil, "could not find service for route (" .. route.id .. "): " ..
-                    err
+                    (err or "no error")
       end
 
       local stype = protocol_subsystem[service.protocol]
