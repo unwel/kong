@@ -1,5 +1,6 @@
 local helpers = require "spec.helpers"
 local declarative = require "kong.db.declarative"
+local declarative_config = require "kong.db.schemas.others.declarative_config"
 
 local fmod    = math.fmod
 
@@ -40,7 +41,8 @@ for _, strategy in helpers.each_strategy() do
 
       if strategy == "off" then
         local entities = assert(bp.done())
-        declarative.load_into_cache(entities)
+        local dc = assert(declarative_config.load(helpers.test_conf.loaded_plugins))
+        declarative.load_into_cache(dc:flatten(entities))
       end
     end)
 
@@ -228,7 +230,8 @@ for _, strategy in helpers.each_strategy() do
 
       if strategy == "off" then
         local entities = assert(bp.done())
-        declarative.load_into_cache(entities)
+        local dc = assert(declarative_config.load(helpers.test_conf.loaded_plugins))
+        declarative.load_into_cache(dc:flatten(entities))
       end
 
       local scenarios = { -- { tags[], expected_result_count }

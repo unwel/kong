@@ -252,23 +252,24 @@ function declarative.load_into_cache(entities)
 
   kong.cache:purge()
 
-  -- Array of strings with this format: "<tag_name>|<entity_name>|<uuid>".
-  -- For example, a service tagged "admin" would produce "admin|services|<the service uuid>"
+  -- Array of strings with this format:
+  -- "<tag_name>|<entity_name>|<uuid>".
+  -- For example, a service tagged "admin" would produce
+  -- "admin|services|<the service uuid>"
   local tags = {}
 
   -- Keys: tag name, like "admin"
-  -- Values: array of encoded tags, similar to the `tags` variable, but filtered for a given tag
+  -- Values: array of encoded tags, similar to the `tags` variable,
+  -- but filtered for a given tag
   local tags_by_name = {}
 
   for entity_name, items in pairs(entities) do
     local dao = kong.db[entity_name]
-    if not dao then
-      goto next_entity
-    end
     local schema = dao.schema
 
     -- Keys: tag_name, eg "admin"
-    -- Values: dictionary of uuids associated to this tag, for a specific entity type
+    -- Values: dictionary of uuids associated to this tag,
+    --         for a specific entity type
     --         i.e. "all the services associated to the 'admin' tag"
     --         The ids are keys, and the values are `true`
     local taggings = {}
@@ -288,15 +289,10 @@ function declarative.load_into_cache(entities)
 
     local ids = {}
     for id, item in pairs(items) do
+      table.insert(ids, id)
+
+      local cache_key = dao:cache_key(id)
       item = remove_nulls(item)
-
-      id = type(id) == "string" and id or item.id
-      if id then
-        table.insert(ids, id)
-        item.id = id
-      end
-
-      local cache_key = dao:cache_key(item)
       local ok, err = kong.cache:get(cache_key, nil, function()
         return item
       end)
@@ -389,8 +385,6 @@ function declarative.load_into_cache(entities)
         return nil, err
       end
     end
-
-    ::next_entity::
   end
 
   for tag_name, tags in pairs(tags_by_name) do
