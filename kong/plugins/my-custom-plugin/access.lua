@@ -49,10 +49,10 @@ local function transform_headers(conf)
     return
   end
 
-  local rewrite
+  local rewrited
 
   local headers = kong.request.get_headers()
-  --headers.host = nil
+  headers.host = nil
 
 
   if rewrite then
@@ -62,14 +62,14 @@ local function transform_headers(conf)
         headers[name] = nil
         clear_header(name)
 
-        if not rewrite then
-          rewrite = true
+        if not rewrited then
+          rewrited = true
         end
       end
     end
   end
 
-  if rewrite then
+  if rewrited then
     kong.service.request.set_headers(headers)
   end
 end
